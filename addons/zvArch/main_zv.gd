@@ -35,9 +35,7 @@ const ERROR_DICT : Dictionary = {
 
 #Plugin functions 
 func _enable_plugin() -> void:
-	var readme_path = ProjectSettings.globalize_path("res://addons/Folder_zvArch/ReadMe.txt")
-	print(readme_path)
-	print_rich(PRINT_DICT["PRT01"] % readme_path)
+	print_rich(PRINT_DICT["PRT01"])
 func _disable_plugin() -> void:
 	print(PRINT_DICT["PRT02"])
 func _enter_tree() -> void:
