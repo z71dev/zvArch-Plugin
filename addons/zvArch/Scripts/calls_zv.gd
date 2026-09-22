@@ -1,8 +1,8 @@
 class_name zvARCH
 extends RefCounted
 
-const load_zvArch = preload("res://addons/zvArch/Files_Parser/load_zv.gd")
-const save_zvArch = preload("res://addons/zvArch/Files_Parser/save_zv.gd")
+const load_zvArch = preload("res://addons/zvArch/Scripts/load_zv.gd")
+const save_zvArch = preload("res://addons/zvArch/Scripts/save_zv.gd")
 
 static func loadzv(path: String, name : String):
 	var parser = load_zvArch.new()
