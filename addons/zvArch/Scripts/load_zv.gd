@@ -34,10 +34,10 @@ static func new_err(num_err : String, path : String, line : int = 0):
 		printerr(str(err," | Line: ", line ," | Path: ", path))
 		return str(err," | Line: ", line ," | Path: ", path)
 
-static func parser_READ(new_path: String, new_name: String):
+static func parser_READ(new_path: String):
 	var zvDict : Dictionary = {}
-	var temp_path = new_path+new_name+".zv"
-	
+	var temp_path : String
+	if new_path.get_extension().to_lower() != "zv": temp_path = new_path+".zv"
 	if not FileAccess.file_exists(temp_path):
 		var new_result = resultContent.new([new_err("C01",temp_path)],{})
 		return new_result
