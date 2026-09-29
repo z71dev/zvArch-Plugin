@@ -36,8 +36,8 @@ static func new_err(num_err : String, path : String, line : int = 0):
 
 static func parser_READ(new_path: String):
 	var zvDict : Dictionary = {}
-	var temp_path : String
-	if new_path.get_extension().to_lower() != "zv": temp_path = new_path+".zv"
+	var temp_path : String = new_path
+	if new_path.get_extension().to_lower() != "zv": temp_path += ".zv"
 	if not FileAccess.file_exists(temp_path):
 		var new_result = resultContent.new([new_err("C01",temp_path)],{})
 		return new_result

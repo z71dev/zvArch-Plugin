@@ -14,11 +14,9 @@ class saveContent:
 		data = temp_data
 
 class resultContent:
-	var succes : bool 
 	var errors: Array = []
 	
-	func _init(temp_err : Array, temp_succes : bool) -> void:
-		succes = temp_succes
+	func _init(temp_err : Array) -> void:
 		errors = temp_err
 
 enum type_data {DEFAULT, ARRAY, ENUM}
@@ -34,15 +32,15 @@ static func new_err(num_err : String, path : String, line : int = 0):
 		return str(err," | Key: ", line ," | Path: ", path)
 
 static func parser_WRITE(new_path: String, new_data : Dictionary):
-	var temp_path : String
-	if new_path.get_extension().to_lower() != "zv" : temp_path = new_path+".zv"
+	var temp_path : String = new_path
+	if new_path.get_extension().to_lower() != "zv" : temp_path +=".zv"
 	var new_save : saveContent = saveContent.new(temp_path, new_data) 
 	new_save.lines.append(format_main("version",main_script.namePlugin,str(main_script.version),type_data.DEFAULT))
 	new_save.lines.append("")
 	main_parser(new_save,type_data.DEFAULT,new_data)
 	var file = FileAccess.open(temp_path,FileAccess.WRITE)
 	if not file:
-		var new_result = resultContent.new([new_err("S01",temp_path)],false)
+		var new_result = resultContent.new([new_err("S01",temp_path)])
 		return new_result
 	file.store_string("\n".join(new_save.lines))
 	file.close() 
