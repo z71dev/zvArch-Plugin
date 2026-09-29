@@ -39,7 +39,10 @@ static func parser_WRITE(new_path: String, new_data : Dictionary, new_metadata :
 	var new_save : saveContent = saveContent.new(temp_path, new_data, new_metadata) 
 	new_save.lines.append(format_main("version",main_script.namePlugin,str(main_script.version),type_data.DEFAULT))
 	new_save.lines.append("")
-	if not new_metadata.is_empty():main_parser(new_save,type_data.DEFAULT,new_metadata)
+	if not new_metadata.is_empty():
+		new_save.lines.append("mtdt.zv/")
+		main_parser(new_save,type_data.DEFAULT,new_metadata)
+		new_save.lines.append("/mtdt.zv")
 	main_parser(new_save,type_data.DEFAULT,new_data)
 	var file = FileAccess.open(temp_path,FileAccess.WRITE)
 	if not file:
@@ -68,14 +71,20 @@ static func main_parser(saveC : saveContent, typ_data : type_data, data : Dictio
 			TYPE_BOOL:saveC.lines.append(format_main("bool",key,str(data[key]),type_data.DEFAULT))
 			TYPE_STRING:saveC.lines.append(format_main("str",key,str(data[key]),type_data.DEFAULT))
 			TYPE_VECTOR2:
-				var vec2 = str(data[key].trim_prefix("(").trim_suffix(")").strip_edges())
+				var vec2 = str(data[key])
+				vec2 = vec2.trim_prefix("(").trim_suffix(")").strip_edges()
 				saveC.lines.append(format_main("vec2",key,str(vec2),type_data.DEFAULT))
 			TYPE_VECTOR3:
-				var vec3 = str(data[key].trim_prefix("(").trim_suffix(")").strip_edges())
+				var vec3 = str(data[key])
+				vec3 = vec3.trim_prefix("(").trim_suffix(")").strip_edges()
 				saveC.lines.append(format_main("vec3",key,str(vec3),type_data.DEFAULT))
 			TYPE_COLOR:
-				var color = str(data[key].trim_prefix("(").trim_suffix(")").strip_edges())
-				saveC.lines.append(format_main("color",key,str(color),type_data.DEFAULT))
+				var colr = str(data[key])
+				colr = colr.trim_prefix("(").trim_suffix(")").strip_edges()
+				saveC.lines.append(format_main("color",key,str(colr),type_data.DEFAULT))
+			_: 
+				saveC.warn.append(new_err("S02",saveC.path,saveC.line_index))
+				saveC.lines.append(format_main("var",key,str(data[key]),type_data.DEFAULT))
 			_: 
 				saveC.warn.append(new_err("S02",saveC.path,saveC.line_index))
 				saveC.lines.append(format_main("var",key,str(data[key]),type_data.DEFAULT))
