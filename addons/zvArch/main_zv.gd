@@ -2,7 +2,7 @@
 extends EditorPlugin
 
 const namePlugin : String  = "zvArch"
-const version : float = 0.1
+const version : Array = [0.2,0.1]
 
 const PRINT_DICT : Dictionary = {
 	"PRT01" : "[b]- The plugin ´zvArch` has been activated -[/b]",

@@ -80,7 +80,7 @@ static func main_parser(loadC: loadContent, typ_data: type_data):
 					loadC.err.append(new_err("C04",loadC.path))
 					break
 				part2 = part2.to_float()
-				if not part2 == main_script.version:
+				if not main_script.version.has(part2):
 					loadC.err.append(new_err("C03",loadC.path))
 					break
 				loadC.if_version = true
