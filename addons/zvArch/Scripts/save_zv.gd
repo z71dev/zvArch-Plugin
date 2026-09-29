@@ -37,7 +37,7 @@ static func parser_WRITE(new_path: String, new_data : Dictionary, new_metadata :
 	var temp_path : String = new_path
 	if new_path.get_extension().to_lower() != "zv" : temp_path +=".zv"
 	var new_save : saveContent = saveContent.new(temp_path, new_data, new_metadata) 
-	new_save.lines.append(format_main("version",main_script.namePlugin,str(main_script.version),type_data.DEFAULT))
+	new_save.lines.append(format_main("version",main_script.namePlugin,str(main_script.version.front()),type_data.DEFAULT))
 	new_save.lines.append("")
 	if not new_metadata.is_empty():
 		new_save.lines.append("mtdt.zv/")
