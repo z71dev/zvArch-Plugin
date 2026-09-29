@@ -8,6 +8,6 @@ static func loadzv(path: String):
 	var parser = load_zvArch.new()
 	return parser.parser_READ(path)
 
-static func savezv(path: String, data : Dictionary):
+static func savezv(path: String, data : Dictionary, metadata : Dictionary = {}):
 	var parser = save_zvArch.new()
-	return parser.parser_WRITE(path, data)
+	return parser.parser_WRITE(path, data, metadata)

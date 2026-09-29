@@ -8,18 +8,22 @@ class loadContent:
 	var line_index : int = 0
 	var lines : Array
 	var err : Array = []
+	var mtdt : Dictionary = {}
 	var closed_data : int = 0
+	var closed_metadata : bool = false
 
 	func _init(temp_pth : String, temp_lns : Array) -> void:
 		path = temp_pth
 		lines = temp_lns
 class resultContent:
 	var data : Dictionary = {}
-	var errors: Array = []
+	var errors : Array = []
+	var metadata : Dictionary = {}
 	
-	func _init(temp_err : Array, temp_data : Dictionary = {}) -> void:
+	func _init(temp_err : Array, temp_data : Dictionary = {}, temp_mtdt : Dictionary = {}) -> void:
 		data = temp_data
 		errors = temp_err
+		metadata = temp_mtdt
 
 enum type_data {DEFAULT, ARRAY, ENUM}
 enum type_format {VAR, INT, FLOAT, BOOL, STRING, VECT2, VECT3, COLOR}
@@ -51,7 +55,7 @@ static func parser_READ(new_path: String):
 	var data = main_parser(new_load, type_data.DEFAULT)
 	if new_load.closed_data != 0:
 		new_load.err.append(new_err("L11",new_load.path,new_load.line_index))
-	var new_result = resultContent.new(new_load.err,data)
+	var new_result = resultContent.new(new_load.err,data,new_load.mtdt)
 	return new_result
 
 static func main_parser(loadC: loadContent, typ_data: type_data):
@@ -84,7 +88,17 @@ static func main_parser(loadC: loadContent, typ_data: type_data):
 			else:
 				loadC.err.append(new_err("C04",loadC.path))
 				break
-
+		if line.begins_with("mtdt.zv/"):
+			var content = line.trim_prefix("mtdt.zv/").strip_edges()
+			loadC.closed_metadata = false
+			loadC.mtdt.merge(main_parser(loadC, type_data.DEFAULT))
+			continue
+		if line.begins_with("/mtdt.zv"):
+			if loadC.closed_metadata :
+				loadC.err.append(new_err("L10",loadC.path, loadC.line_index))
+				continue
+			loadC.closed_metadata = true
+			return temp_dict
 		match line.strip_edges().get_slice(" ",0): #Estructuras de datos
 			"dict/":
 				var content = line.trim_prefix("dict/").strip_edges()
