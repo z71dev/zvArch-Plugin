@@ -14,6 +14,7 @@ const ERROR_DICT : Dictionary = {
 	"C02" : "ERROR_C02 | Could not open file (permision/corruption) ",
 	"C03" : "ERROR_C03 | Incompatible version ",
 	"C04" : "ERROR_C04 | Version line missing or malformed ",
+	"C05" : "ERROR_C05 | The file does not end in `.zv` ",
 	##Load
 	"L01" : "ERROR_LD01 | Misign `:` or value ",
 	"L02" : "ERROR_LD02 | Invalid / maformed value (generic) ",

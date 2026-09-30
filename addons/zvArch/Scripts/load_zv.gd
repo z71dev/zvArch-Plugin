@@ -39,19 +39,19 @@ static func new_err(num_err : String, path : String, line : int = 0):
 		return str(err," | Line: ", line ," | Path: ", path)
 
 static func parser_READ(new_path: String):
-	var zvDict : Dictionary = {}
-	var temp_path : String = new_path
-	if new_path.get_extension().to_lower() != "zv": temp_path += ".zv"
-	if not FileAccess.file_exists(temp_path):
-		var new_result = resultContent.new([new_err("C01",temp_path)],{})
+	if new_path.get_extension().to_lower() != "zv": 
+		var new_result = resultContent.new([new_err("C05",new_path)],{})
 		return new_result
-	var file = FileAccess.open(temp_path,FileAccess.READ)
+	if not FileAccess.file_exists(new_path):
+		var new_result = resultContent.new([new_err("C01",new_path)],{})
+		return new_result
+	var file = FileAccess.open(new_path,FileAccess.READ)
 	if not file:
-		var new_result = resultContent.new([new_err("C02",temp_path)],{})
+		var new_result = resultContent.new([new_err("C02",new_path)],{})
 		return new_result
 	var text = file.get_as_text().split("\n")
 	file.close()
-	var new_load = loadContent.new(temp_path,text)
+	var new_load = loadContent.new(new_path,text)
 	var data = main_parser(new_load, type_data.DEFAULT)
 	if new_load.closed_data != 0:
 		new_load.err.append(new_err("L11",new_load.path,new_load.line_index))
@@ -89,9 +89,10 @@ static func main_parser(loadC: loadContent, typ_data: type_data):
 				loadC.err.append(new_err("C04",loadC.path))
 				break
 		if line.begins_with("mtdt.zv/"):
-			var content = line.trim_prefix("mtdt.zv/").strip_edges()
-			loadC.closed_metadata = false
-			loadC.mtdt.merge(main_parser(loadC, type_data.DEFAULT))
+			if not loadC.closed_metadata:
+				var content = line.trim_prefix("mtdt.zv/").strip_edges()
+				loadC.closed_metadata = false
+				loadC.mtdt.merge(main_parser(loadC, type_data.DEFAULT))
 			continue
 		if line.begins_with("/mtdt.zv"):
 			if loadC.closed_metadata :
