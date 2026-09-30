@@ -39,9 +39,9 @@ static func parser_WRITE(new_path: String, new_data : Dictionary, new_metadata :
 	new_save.lines.append("")
 	main_parser(new_save,type_data.DEFAULT,new_data) #Data
 	if not new_metadata.is_empty(): 
-		new_save.lines.append("mtdt.zv/")
+		new_save.lines.append("mtdt/")
 		main_parser(new_save,type_data.DEFAULT,new_metadata) #Metadata
-		new_save.lines.append("/mtdt.zv")
+		new_save.lines.append("/mtdt")
 	if new_path.get_extension().to_lower() != "zv": 
 		var new_result = resultContent.new([new_err("C05",new_path)])
 		return new_result

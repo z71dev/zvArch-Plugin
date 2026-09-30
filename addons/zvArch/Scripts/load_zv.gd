@@ -88,13 +88,13 @@ static func main_parser(loadC: loadContent, typ_data: type_data):
 			else:
 				loadC.err.append(new_err("C04",loadC.path))
 				break
-		if line.begins_with("mtdt.zv/"):
+		if line.begins_with("mtdt/"):
 			if not loadC.closed_metadata:
 				var content = line.trim_prefix("mtdt.zv/").strip_edges()
 				loadC.closed_metadata = false
 				loadC.mtdt.merge(main_parser(loadC, type_data.DEFAULT))
 			continue
-		if line.begins_with("/mtdt.zv"):
+		if line.begins_with("/mtdt"):
 			if loadC.closed_metadata :
 				loadC.err.append(new_err("L10",loadC.path, loadC.line_index))
 				continue
