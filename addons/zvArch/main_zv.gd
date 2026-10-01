@@ -31,7 +31,9 @@ const ERROR_DICT : Dictionary = {
 	##Save
 	"S01" : "ERROR_SV01 | Could no create/write file ",
 	"S02" : "ERROR_SV02 | Unsupported data type - value converted to a string ",
-	"S03" : "ERROR_SV03 | Dictionary key is not String"
+	"S03" : "ERROR_SV03 | Dictionary key is not String",
+	##Metadata
+	"M01" : "ERROR_MTDT | Metadata has not been properly closed"
 }
 
 #Plugin functions 

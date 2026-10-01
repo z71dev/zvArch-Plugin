@@ -11,7 +11,7 @@ static func loadzv(path : String):
 
 static func savezv(path : String, data : Dictionary, metadata : Dictionary = {}):
 	var parser = save_zvArch.new()
-	return parser.parser_WRITE(path, data, metadata)
+	return parser.parser_WRITE(path, data, metadata, false)
 
 static func savezv_metadata(path : String, metadata : Dictionary):
 	var parser = metadata_zvArch.new()

@@ -95,8 +95,8 @@ static func main_parser(loadC: loadContent, typ_data: type_data, only_metadata :
 				loadC.mtdt.merge(main_parser(loadC, type_data.DEFAULT, false))
 			continue
 		if line.begins_with("/mtdt"):
-			if loadC.closed_metadata :
-				loadC.err.append(new_err("L10",loadC.path, loadC.line_index))
+			if loadC.closed_metadata:
+				loadC.err.append(new_err("M01",loadC.path, loadC.line_index))
 				continue
 			loadC.closed_metadata = true
 			return temp_dict

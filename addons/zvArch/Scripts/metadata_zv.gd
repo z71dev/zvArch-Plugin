@@ -30,22 +30,15 @@ static func parser_METADATA(s_l_metadata :  bool,new_path : String, new_metadata
 	if new_path.get_extension().to_lower() != "zv": 
 		var new_result = SAVE_resultContent.new([new_err("C05",new_path)])
 		return new_result
-	if not FileAccess.file_exists(new_path):
+	if not FileAccess.file_exists(new_path) and not s_l_metadata:
 		var new_result = SAVE_resultContent.new([new_err("C01",new_path)])
 		return new_result
-	var file = FileAccess.open(new_path,FileAccess.READ)
-	if not file:
-		var new_result = SAVE_resultContent.new([new_err("C02",new_path)])
+	var new_result 
+	if s_l_metadata:
+		var save_metadata = save_script.parser_WRITE(new_path,{},new_metadata,true)
+		new_result = SAVE_resultContent.new(save_metadata.errors)
 		return new_result
-	file.close()
-	
-	var new_result
-	var load_metadata = load_script.parser_READ(new_path, true)
-	#if s_l_metadata:
-		#var save_metadata = save_script.parser_WRITE(new_path,)
-		#var group_errors : Array  = save_metadata.errors
-		#group_errors.append_array(load_metadata.errors)
-		#new_result = SAVE_resultContent.new(group_errors)
-		#return new_result
-	new_result = LOAD_resultContent.new(load_metadata.errors,load_metadata.metadata)
-	return new_result
+	else: 
+		var load_metadata = load_script.parser_READ(new_path, true)
+		new_result = LOAD_resultContent.new(load_metadata.errors,load_metadata.metadata)
+		return new_result
