@@ -1,7 +1,8 @@
 extends RefCounted
  
 const main_script = preload("res://addons/zvArch/main_zv.gd")
-const call_script = preload("res://addons/zvArch/Scripts/calls_zv.gd")
+const load_script = preload("res://addons/zvArch/Scripts/load_zv.gd")
+const save_script = preload("res://addons/zvArch/Scripts/save_zv.gd")
 
 class SAVE_resultContent:
 	var errors : Array = []
@@ -39,12 +40,12 @@ static func parser_METADATA(s_l_metadata :  bool,new_path : String, new_metadata
 	file.close()
 	
 	var new_result
-	var load_metadata = call_script.loadzv(new_path)
-	if s_l_metadata:
-		var save_metadata = call_script.savezv(new_path,load_metadata.data,new_metadata)
-		var group_errors : Array  = save_metadata.errors
-		group_errors.append_array(load_metadata.errors)
-		new_result = SAVE_resultContent.new(group_errors)
-		return new_result
+	var load_metadata = load_script.parser_READ(new_path, true)
+	#if s_l_metadata:
+		#var save_metadata = save_script.parser_WRITE(new_path,)
+		#var group_errors : Array  = save_metadata.errors
+		#group_errors.append_array(load_metadata.errors)
+		#new_result = SAVE_resultContent.new(group_errors)
+		#return new_result
 	new_result = LOAD_resultContent.new(load_metadata.errors,load_metadata.metadata)
 	return new_result

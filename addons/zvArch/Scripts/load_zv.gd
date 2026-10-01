@@ -38,7 +38,7 @@ static func new_err(num_err : String, path : String, line : int = 0):
 		printerr(str(err," | Line: ", line ," | Path: ", path))
 		return str(err," | Line: ", line ," | Path: ", path)
 
-static func parser_READ(new_path: String):
+static func parser_READ(new_path: String, only_metadata : bool = false):
 	if new_path.get_extension().to_lower() != "zv": 
 		var new_result = resultContent.new([new_err("C05",new_path)],{})
 		return new_result
@@ -52,13 +52,13 @@ static func parser_READ(new_path: String):
 	var text = file.get_as_text().split("\n")
 	file.close()
 	var new_load = loadContent.new(new_path,text)
-	var data = main_parser(new_load, type_data.DEFAULT)
+	var data = main_parser(new_load, type_data.DEFAULT, only_metadata)
 	if new_load.closed_data != 0:
 		new_load.err.append(new_err("L11",new_load.path,new_load.line_index))
 	var new_result = resultContent.new(new_load.err,data,new_load.mtdt)
 	return new_result
 
-static func main_parser(loadC: loadContent, typ_data: type_data):
+static func main_parser(loadC: loadContent, typ_data: type_data, only_metadata : bool = false):
 	var temp_dict : Dictionary = {}
 	var temp_array : Array = []
 	while loadC.line_index < loadC.lines.size():
@@ -90,9 +90,9 @@ static func main_parser(loadC: loadContent, typ_data: type_data):
 				break
 		if line.begins_with("mtdt/"):
 			if not loadC.closed_metadata:
-				var content = line.trim_prefix("mtdt.zv/").strip_edges()
+				var content = line.trim_prefix("mtdt/").strip_edges()
 				loadC.closed_metadata = false
-				loadC.mtdt.merge(main_parser(loadC, type_data.DEFAULT))
+				loadC.mtdt.merge(main_parser(loadC, type_data.DEFAULT, false))
 			continue
 		if line.begins_with("/mtdt"):
 			if loadC.closed_metadata :
@@ -100,82 +100,84 @@ static func main_parser(loadC: loadContent, typ_data: type_data):
 				continue
 			loadC.closed_metadata = true
 			return temp_dict
-		match line.strip_edges().get_slice(" ",0): #Estructuras de datos
-			"dict/":
-				var content = line.trim_prefix("dict/").strip_edges()
-				if content == "" and not typ_data == type_data.ARRAY:
-					loadC.err.append(new_err("L01",loadC.path, loadC.line_index))
+		if not only_metadata:
+			match line.strip_edges().get_slice(" ",0): #Estructuras de datos
+				"dict/":
+					var content = line.trim_prefix("dict/").strip_edges()
+					if content == "" and not typ_data == type_data.ARRAY:
+						loadC.err.append(new_err("L01",loadC.path, loadC.line_index))
+						continue
+					loadC.closed_data += 1
+					var resultMain = main_parser(loadC,type_data.DEFAULT)
+					if typ_data == type_data.ARRAY: temp_array.append(resultMain)
+					else: temp_dict[content] = resultMain
 					continue
-				loadC.closed_data += 1
-				var resultMain = main_parser(loadC,type_data.DEFAULT)
-				if typ_data == type_data.ARRAY: temp_array.append(resultMain)
-				else: temp_dict[content] = resultMain
-				continue
-			"/dict" :
-				if loadC.closed_data <= 0:
-					loadC.err.append(new_err("L10",loadC.path, loadC.line_index))
+				"/dict" :
+					if loadC.closed_data <= 0:
+						loadC.err.append(new_err("L10",loadC.path, loadC.line_index))
+						continue
+					if not typ_data == type_data.DEFAULT:
+						loadC.err.append(new_err("L10",loadC.path, loadC.line_index))
+						continue
+					loadC.closed_data -= 1
+					return temp_dict
+				"array/":
+					var content = line.trim_prefix("array/").strip_edges()
+					if content == "" and not typ_data == type_data.ARRAY:
+						loadC.err.append(new_err("L01",loadC.path, loadC.line_index))
+						continue
+					loadC.closed_data += 1
+					var resultMain = main_parser(loadC,type_data.ARRAY)
+					if typ_data == type_data.ARRAY: temp_array.append(resultMain)
+					else: temp_dict[content] = resultMain
 					continue
-				if not typ_data == type_data.DEFAULT:
-					loadC.err.append(new_err("L10",loadC.path, loadC.line_index))
-					continue
-				loadC.closed_data -= 1
-				return temp_dict
-			"array/":
-				var content = line.trim_prefix("array/").strip_edges()
-				if content == "" and not typ_data == type_data.ARRAY:
-					loadC.err.append(new_err("L01",loadC.path, loadC.line_index))
-					continue
-				loadC.closed_data += 1
-				var resultMain = main_parser(loadC,type_data.ARRAY)
-				if typ_data == type_data.ARRAY: temp_array.append(resultMain)
-				else: temp_dict[content] = resultMain
-				continue
-			"/array" :
-				if loadC.closed_data <= 0:
-					loadC.err.append(new_err("L10",loadC.path, loadC.line_index))
-					continue
-				if not typ_data == type_data.ARRAY:
-					loadC.err.append(new_err("L10",loadC.path, loadC.line_index))
-					continue
-				loadC.closed_data -= 1
-				return temp_array
-		match line.strip_edges().get_slice(" ",0): #Normal and Open
-			"var":
-				var content = line.trim_prefix("var").strip_edges()
-				if not split_main(loadC,typ_data,type_format.VAR,temp_dict,temp_array,content):
-					continue
-			"int": 
-				var content = line.trim_prefix("int").strip_edges()
-				if not split_main(loadC,typ_data,type_format.INT,temp_dict,temp_array,content):
-					continue 
-			"float": 
-				var content = line.trim_prefix("float").strip_edges()
-				if not split_main(loadC,typ_data,type_format.FLOAT,temp_dict,temp_array,content):
-					continue 
-			"bool":
-				var content = line.trim_prefix("bool").strip_edges()
-				if not split_main(loadC,typ_data,type_format.BOOL,temp_dict,temp_array,content):
-					continue 
-			"str", "str/": 
-				var content = str_main(loadC,"str","/str",line)
-				if not content:
-					content = line.trim_prefix("str").strip_edges()
-				if not split_main(loadC,typ_data,type_format.STRING,temp_dict,temp_array,content):
-					continue 
-			"vec2":
-				var content = line.trim_prefix("vec2").strip_edges()
-				if not split_main(loadC,typ_data,type_format.VECT2,temp_dict,temp_array,content):
-					continue 
-			"vec3":
-				var content = line.trim_prefix("vec3").strip_edges()
-				if not split_main(loadC,typ_data,type_format.VECT3,temp_dict,temp_array,content):
-					continue 
-			"color":
-				var content = line.trim_prefix("color").strip_edges()
-				if not split_main(loadC,typ_data,type_format.COLOR,temp_dict,temp_array,content):
-					continue 
-			_:
-				loadC.err.append(new_err("L12",loadC.path,loadC.line_index))
+				"/array" :
+					if loadC.closed_data <= 0:
+						loadC.err.append(new_err("L10",loadC.path, loadC.line_index))
+						continue
+					if not typ_data == type_data.ARRAY:
+						loadC.err.append(new_err("L10",loadC.path, loadC.line_index))
+						continue
+					loadC.closed_data -= 1
+					return temp_array
+			match line.strip_edges().get_slice(" ",0): #Normal and Open
+				"var":
+					var content = line.trim_prefix("var").strip_edges()
+					if not split_main(loadC,typ_data,type_format.VAR,temp_dict,temp_array,content):
+						continue
+				"int": 
+					var content = line.trim_prefix("int").strip_edges()
+					if not split_main(loadC,typ_data,type_format.INT,temp_dict,temp_array,content):
+						continue 
+				"float": 
+					var content = line.trim_prefix("float").strip_edges()
+					if not split_main(loadC,typ_data,type_format.FLOAT,temp_dict,temp_array,content):
+						continue 
+				"bool":
+					var content = line.trim_prefix("bool").strip_edges()
+					if not split_main(loadC,typ_data,type_format.BOOL,temp_dict,temp_array,content):
+						continue 
+				"str", "str/": 
+					var content = str_main(loadC,"str","/str",line)
+					if not content:
+						content = line.trim_prefix("str").strip_edges()
+					if not split_main(loadC,typ_data,type_format.STRING,temp_dict,temp_array,content):
+						continue 
+				"vec2":
+					var content = line.trim_prefix("vec2").strip_edges()
+					if not split_main(loadC,typ_data,type_format.VECT2,temp_dict,temp_array,content):
+						continue 
+				"vec3":
+					var content = line.trim_prefix("vec3").strip_edges()
+					if not split_main(loadC,typ_data,type_format.VECT3,temp_dict,temp_array,content):
+						continue 
+				"color":
+					var content = line.trim_prefix("color").strip_edges()
+					if not split_main(loadC,typ_data,type_format.COLOR,temp_dict,temp_array,content):
+						continue 
+				_:
+					loadC.err.append(new_err("L12",loadC.path,loadC.line_index))
+		else: continue
 	return temp_dict
 
 static func split_main(loadC:loadContent,typ_data: type_data, typ_format : type_format, temp_dict : Dictionary, temp_array : Array, content: String):

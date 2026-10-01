@@ -7,7 +7,7 @@ const metadata_zvArch = preload("res://addons/zvArch/Scripts/metadata_zv.gd")
 
 static func loadzv(path : String):
 	var parser = load_zvArch.new()
-	return parser.parser_READ(path)
+	return parser.parser_READ(path, false)
 
 static func savezv(path : String, data : Dictionary, metadata : Dictionary = {}):
 	var parser = save_zvArch.new()
