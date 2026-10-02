@@ -5,7 +5,7 @@ const namePlugin : String  = "zvArch"
 const version : Array = [0.2,0.1]
 
 const PRINT_DICT : Dictionary = {
-	"PRT01" : "[b]- The plugin ´zvArch` has been activated -[/b]",
+	"PRT01" : "[b]- The plugin ´zvArch` has been activated [color=green][url=https://ko-fi.com/z71_official]Support Me![/url][/color] -[/b]",
 	"PRT02" : "- bye.zv -" 
 }     
 const ERROR_DICT : Dictionary = {

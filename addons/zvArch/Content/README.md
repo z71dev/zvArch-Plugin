@@ -1,214 +1,207 @@
-# zvArch
+## ZVARCH
+***
+**zvArch** is a data saving/loading plugin for Godot based on ".zv", a custom file format designed to be simple, easy to read, and easy to integrate.
 
-The ReadMe will be recreated for the next update. (Sorry)
+Contents
+- API and usage examples
+- Supported data types
+- What is a .zv format? Syntax
+- Error Handling
+- Roadmap
+- How to Contribute and Support the Plugin
 
-A save/load system for Godot 4 built around a custom file format (`.zv`), designed to be simple, human-readable, and easy to drop into any project.
+### API
 
-This is an actively developed personal project — feedback and bug reports are welcome via [Issues](#contributing--reporting-bugs).
+To access the API, you must log in with the class:
+``` zvARCH ```
 
-☕ If this plugin is useful to you, consider supporting development on [Ko-fi](#) — but only if you want to, no pressure.
-
----
-
-## Table of Contents
-
-- [Installation](#installation)
-- [API Reference](#api-reference)
-- [Supported Types](#supported-types)
-- [The `.zv` File Format](#the-zv-file-format)
-- [Usage Examples](#usage-examples)
-- [Troubleshooting](#troubleshooting)
-- [Roadmap](#roadmap)
-- [Contributing / Reporting Bugs](#contributing--reporting-bugs)
-- [License](#license)
-
----
-
-## Installation
-
-**Option A — Godot Asset Library**
-1. In Godot, go to the **AssetLib** tab.
-2. Search for `zvArch` (or `Save System: zvArch`).
-3. Click **Download**, then **Install**.
-4. Enable the plugin under **Project > Project Settings > Plugins**.
-
-**Option B — Manual install**
-1. Download or clone this repository.
-2. Copy the `addons/zvArch` folder into your project's `addons/` directory.
-3. Enable the plugin under **Project > Project Settings > Plugins**.
-
----
-
-## API Reference
-
-### `zvArch.savezv(path, name, data)`
-
-Saves a dictionary of data to a `.zv` file.
-
-| Parameter | Type | Description |
-|---|---|---|
-| `path` | `String` | File path to save to (e.g. `"user://save.zv"`) |
-| `name` | `String` | Name of the data block being saved (used to identify it when loading) |
-| `data` | `Dictionary` | The data to save |
-
-Returns nothing. If the save fails, the error is printed to the console.
-
-### `zvArch.loadzv(path, name)`
-
-Loads a previously saved data block from a `.zv` file.
-
-| Parameter | Type | Description |
-|---|---|---|
-| `path` | `String` | File path to load from |
-| `name` | `String` | Name of the data block to load |
-
-**Returns:** `{ data: Dictionary or null, error: String or null }`
-
-- If loading succeeds, `data` contains your dictionary and `error` is `null`.
-- If loading fails, `data` is `null` and `error` contains a description of what went wrong.
-
----
-
-## Supported Types
-
-| Type | Notes |
-|---|---|
-| `int` | |
-| `float` | |
-| `bool` | |
-| `str` | Single-line or multi-line (see [file format](#the-zv-file-format)) |
-| `Vector2` | |
-| `Vector3` | |
-| `Color` | |
-| `var` | Untyped — value type is auto-inferred on load |
-| `dict` / `array` | Nested structures — dictionaries and arrays can contain any of the above, including other nested `dict`/`array` blocks |
-
-> **Unrecognized data:** Any data type not in the list above is saved as `var` inside the `.zv` file. When loaded back, it converts to `string`.
-
----
-
-## The `.zv` File Format
-
-Each line declares a typed value:
-
+##### SAVE DATA ("savezv")
 ```
-type name : value
+data = {"health" : 100}
+metadata = {"timestamp" : Time.get_unix_time_from_system()}
+
+zvARCH.savezv(path : String, data : Dictionary, metadata : Dictionary = {})
 ```
 
-### Multi-line text
+- path: must end with ".zv".
+- data: Dictionary with the data to be stored.
+- metadata (optional): Dictionary with additional data.
 
-For longer strings, open a block with `type/` and close it on its own line with `/type`. Everything between the two lines — including quotes and apostrophes — is taken literally, with no need to escape anything.
-
+##### LOAD DATA ("loadzv")
 ```
-str/ notes :
-Here I can write several lines
-with "quotes" and apostrophes 'without any issue'.
+var result = zvARCH.loadzv(path : String)
+
+var playerData = result.data
+var saveData = result.metadata
+
+health = playerData["health"] #100
+timestamp = saveData["timestamp"] #1727520312
+```
+
+- path: path to the ".zv" file.
+- Return: Returns an instance with the loaded information:
+	- To access the dictionary with the saved data, use the ```.data``` property.
+	- To access the dictionary with the saved metadata, use the ```.metadata``` property.
+
+----
+**Metadata:** Metadata-only functions are much more efficient because they do not load or transform data other than metadata.
+
+##### SAVE METADATA ("savezv_metadata")
+```
+zvARCH.savezv_metadata(path: String, metadata: Dictionary)
+```
+
+- path: must end in ".zv".
+- metadata: Dictionary with the metadata to be stored.
+- **Note:** Saving replaces existing metadata.
+
+##### LOAD METADATA ("loadzv_metadata")
+```
+var result = zvARCH.loadzv_metadata(path: String)
+
+var saveData = result.metadata
+
+timestamp = saveData["timestamp"] #1727520312
+```
+
+- path: path to the ".zv" file.
+- Return: Returns an instance with the loaded information:
+	- To access the dictionary with the saved metadata, use the `.metadata` property.
+
+## Accepted Data Types
+**DATA**
+```INT, FLOAT, BOOL, STRING, VECTOR2, VECTOR3, COLOR```
+
+**STRUCTURES** (Allows unlimited nested structures)
+``` DICTIONARY, ARRAY```
+
+**UNKNOWN DATA**
+Unknown data is stored as ``` STRING ```, and within the ".zv" format, it is stored as ``` VAR ```. This is done so that it can be manually decomposed. Caution is advised if you attempt to use the data even while it is still ``` STRING ```.
+
+## ".zv" Format
+This is a text file designed for Godot to store the information you need. The plugin creates, modifies, and reads it, so you don't usually have to touch it, but you can open it with any text editor and understand it at a glance (perfect for mods or community contributions).
+
+##### SYNTAX
+Data types in ".zv":
+
+| **Godot**  | **.zv** |
+| ---------- | ------- |
+| int        | int     |
+| float      | float   |
+| bool       | bool    |
+| string     | str     |
+| vector2    | vec2    |
+| vector3    | vec3    |
+| color      | color   |
+| dictionary | dict    |
+| array      | array   |
+
+**Composition** (Each line is a data type)
+```
+data type name : data
+
+#Example
+int points : 10
+```
+
+**VAR** If you don't want to specify the data type, use ``` var ``` and the plugin will infer it for you:
+```
+var lives : 3
+var player name : z71
+```
+
+**STR/** If you want to have text organized across multiple lines, you can open a slash right after the ```STR``` type:
+```
+str/ description :
+This is a very long text.
+It can have quotation marks and apostrophes without any problem.
+And occupy as many lines as you want.
 /str
 ```
+(**IMPORTANT:** It must be closed with ``` /str ```).
 
-### Nested structures
-
-`dict` and `array` blocks can contain any typed line, including other nested `dict`/`array` blocks:
-
+**DATA STRUCTURES** To group data, open the structure with its type followed by / (":" is not necessary):
 ```
-dict/ inventory
-    int gold : 120
-    array/ items
-        str sword
-        str potion
-    /array
+dict/ options
+int volume : 80
+bool full_screen : false
+/dict
+
+# They can be nested
+dict/ player
+str name : z71
+array/ items
+str sword
+/array
 /dict
 ```
+(**IMPORTANT:** It must be closed with a "/", followed by the type: ``` /dict ```).
 
----
-
-## Usage Examples
-
-### Quick save & load
-
-```gdscript
-var progress = {
-    "level": 3,
-    "health": 85.5,
-    "player_name": "Ash",
-    "position": Vector2(120, 340),
-    "has_key": true
-}
-# Saves "progress" into save.zv
-zvArch.savezv("user://save.zv", "progress", progress)
-
-# Loads the data stored under "progress"
-var loaded_progress = zvArch.loadzv("user://save.zv", "progress").data
-print("Welcome back, ", loaded_progress.player_name)
-```
-
-### Checking for load errors
-
-```gdscript
-var result = zvArch.loadzv("user://save.zv", "progress")
-if result.data != null:
-    # Everything went fine, use the data normally
-    var loaded_progress = result.data
-    print("Level: ", loaded_progress.level)
-else:
-    # Something failed while reading or parsing the file
-    print("Failed to load save: ", result.error)
-```
-
-### Full example `.zv` file
+### Errors
+Errors are sent in two ways: they are printed to the output and returned in each API.
+To access errors in the APIs, simply use ```.errors``` and it will return an array containing them.
 
 ```
-int level : 3
-float health : 85.5
-str player_name : Ash
+var result = zvARCH.loadzv(path : String)
 
-str/ notes :
-Here I can write several lines
-with "quotes" and apostrophes 'without any issue'.
-/str
-
-dict/ inventory
-    int gold : 120
-    array/ items
-        str sword
-        str potion
-    /array
-/dict
+var errorsArray = result.errors # Array []
 ```
 
----
+**Error List**
+```
+##Default
+ERROR_C01 | Route misspelled or not exists
+ERROR_C02 | Could not open file (permission/corruption)
+ERROR_C03 | Incompatible version
+ERROR_C04 | Version line missing or malformed
+ERROR_C05 | The file does not end in `.zv`
+##Load
+ERROR_LD01 | Missign `:` or value
+ERROR_LD02 | Invalid/maformed value (generic)
+ERROR_LD03 | Invalid INT
+ERROR_LD04 | Invalid FLOAT
+ERROR_LD05 | Invalid BOOL
+ERROR_LD06 | Invalid VEC2
+ERROR_LD07 | Invalid VEC3
+ERROR_LD08 | Invalid COLOR
+ERROR_LD09 | Unclosed multiline string block
+ERROR_LD10 | Orphaned closing tag or mismatch with opening tag
+ERROR_LD11 | dict/array/ without closing at the end of the file
+ERROR_LD12 | Unrecognized tag/type
+##Save
+ERROR_SV01 | Could not create/write file
+ERROR_SV02 | Unsupported data type - value converted to a string
+ERROR_SV03 | Dictionary key is not String
+##Metadata
+ERROR_MTDT01 | Metadata has not been properly closed
+```
 
-## Troubleshooting
+Default errors are common, and the others are generally generated by manual editing.
 
-Most errors happen when a `.zv` file has been **edited by hand**. If `loadzv()` returns `data == null`, check the `error` field first — then look for these common causes:
+### RoadMap
+**In no particular order**
+- More data types:
+	- VECTOR4, RECT2, QUATERNION, TRANSFORM2D, TRANSFORM3D, PACKED* ARRAY.
+- Temporary file system (To prevent corruption)
+- Temporary save system: (Deleted when the game is closed.)
+- Steam cloud save compatibility.
+- Encryption:
+	- Basic: Godot native encryption, SHA-256 checksum
+	- Advanced: Proprietary AES encryption, HMAC signature, User-derived key.
+- Save to media file.
+- Native mod system.
+- Native save slot and multi-save system.
+- API for updating previous versions (only if the syntax changes).
 
-- **Mismatched type tags** — the type used to open a block (`str/`, `dict/`, `array/`) must match the type used to close it (`/str`, `/dict`, `/array`).
-- **Multi-line blocks not closed on their own line** — the closing tag (e.g. `/str`) must be the only thing on its line.
-- **Malformed or incomplete type declarations** — every line must start with a recognized type followed by a name and, for single-line values, a `:` and a value.
-- **Incorrect nesting** — every `dict/` or `array/` block must be closed before its parent block closes.
+### Contribute and Support
+If you like the plugin and want to support it, you can do so in the following ways:
+- Contribute on GitHub: Bugs, ideas, or improvements.
+https://github.com/z71dev/zvArch-Plugin.git
+- Buy me a coffee on Ko-fi: It's optional, but greatly appreciated.
+https://ko-fi.com/z71_official
+- Share: Talking about the plugin with others who might find it useful is also a great help.
+https://store.godotengine.org/asset/z71/save-system-zvarch/
 
-If none of the above resolves the issue, please open an [Issue](#contributing--reporting-bugs) with the `.zv` file (or the relevant snippet) attached.
-
----
-
-## Roadmap
-
-- Multiple save slots
-- More types: `Vector4`, `Rect2`, `Transform2D` / `Transform3D`, packed arrays
-- Integrated mod system
-- Continued improvements to robustness and error handling
-- Anti-corruption save safety (write-to-temp-then-merge strategy) — planned, not yet implemented
-
-This list isn't exhaustive — check back here for updates as development continues.
-
----
-
-## Contributing / Reporting Bugs
-
-This is a personal project in active development. Bug reports, feature suggestions, and pull requests are welcome — please open an Issue on the GitHub repository.
-
----
-
-## License
-
-MIT
+> [!NOTE] THANK YOU
+> This is a completely personal project, made with eart,and is constantly being updated.
+> (Everything was translated using Google Translate)
