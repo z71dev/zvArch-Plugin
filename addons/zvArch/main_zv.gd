@@ -11,13 +11,13 @@ const PRINT_DICT : Dictionary = {
 const ERROR_DICT : Dictionary = {
 	##Default
 	"C01" : "ERROR_C01 | Route misspelled or not exist ",
-	"C02" : "ERROR_C02 | Could not open file (permision/corruption) ",
+	"C02" : "ERROR_C02 | Could not open file (permission/corruption) ",
 	"C03" : "ERROR_C03 | Incompatible version ",
 	"C04" : "ERROR_C04 | Version line missing or malformed ",
 	"C05" : "ERROR_C05 | The file does not end in `.zv` ",
 	##Load
 	"L01" : "ERROR_LD01 | Misign `:` or value ",
-	"L02" : "ERROR_LD02 | Invalid / maformed value (generic) ",
+	"L02" : "ERROR_LD02 | Invalid / malformed value (generic) ",
 	"L03" : "ERROR_LD03 | Invalid INT ",
 	"L04" : "ERROR_LD04 | Invalid FLOAT ",
 	"L05" : "ERROR_LD05 | Invalid BOOL ",
@@ -26,7 +26,7 @@ const ERROR_DICT : Dictionary = {
 	"L08" : "ERROR_LD08 | Invalid COLOR ",
 	"L09" : "ERROR_LD09 | Unclosed multiline string block ",
 	"L10" : "ERROR_LD10 | Orphaned closing tag or mismatch with opening tag ",
-	"L11" : "ERROR_LD11 | dict/array/ sin cerrar al final del archivo ",
+	"L11" : "ERROR_LD11 | dict/array/ without closing at the end of the file ",
 	"L12" : "ERROR_LD12 | Unrecognized tag/type ",
 	##Save
 	"S01" : "ERROR_SV01 | Could no create/write file ",

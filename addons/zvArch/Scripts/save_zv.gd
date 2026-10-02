@@ -55,8 +55,11 @@ static func parser_WRITE(new_path: String, new_data : Dictionary, new_metadata :
 		if init != -1 and finish != -1 and init < finish:
 			text = text.slice(0,init) + text.slice(finish + 1)
 			new_save.lines.append_array(text)
-		elif init == -1 and finish != -1 or init != -1 and finish == -1:
-			var new_result = resultContent.new([new_err("M01",new_path)]) # Añadir nuevo error, la metadata anterior no se puedo eliminar
+		elif init == -1 and finish == -1:
+			if not temp_text.is_empty():
+				new_save.lines.append_array(text)
+		else:
+			var new_result = resultContent.new([new_err("M01",new_path)])
 			return new_result
 	else: 
 		new_save.lines.append(format_main("version",main_script.namePlugin,str(main_script.version.front()),type_data.DEFAULT))
@@ -73,15 +76,15 @@ static func parser_WRITE(new_path: String, new_data : Dictionary, new_metadata :
 	var file = FileAccess.open(new_path,FileAccess.WRITE)
 	if not file:
 		var new_result = resultContent.new([new_err("S01",new_path)])
-		file.close()
 		return new_result
 	file.store_string("\n".join(new_save.lines))
 	file.close()
 	var new_result = resultContent.new(new_save.warn)
 	return new_result
 
-static func main_parser(saveC : saveContent, typ_data : type_data, data : Dictionary):
-	for key in data.keys():
+static func main_parser(saveC : saveContent, typ_data : type_data, data):
+	var keys  = data.keys() if data is Dictionary else range(data.size())
+	for key in keys:
 		saveC.line_index += 1
 		if typeof(key) != TYPE_STRING and typ_data != type_data.ARRAY:
 			saveC.warn.append(new_err("S03",saveC.path,saveC.line_index))
@@ -94,30 +97,44 @@ static func main_parser(saveC : saveContent, typ_data : type_data, data : Dictio
 				saveC.lines.append("array/ %s"%("" if typ_data == type_data.ARRAY else key))
 				main_parser(saveC,type_data.ARRAY,data[key])
 				saveC.lines.append("/array")
-			TYPE_INT:saveC.lines.append(format_main("int",key,str(data[key]),type_data.DEFAULT))
-			TYPE_FLOAT:saveC.lines.append(format_main("float",key,str(data[key]),type_data.DEFAULT))
-			TYPE_BOOL:saveC.lines.append(format_main("bool",key,str(data[key]),type_data.DEFAULT))
-			TYPE_STRING:saveC.lines.append(format_main("str",key,str(data[key]),type_data.DEFAULT))
+			TYPE_INT:saveC.lines.append(format_main("int",key,str(data[key]),typ_data))
+			TYPE_FLOAT:saveC.lines.append(format_main("float",key,str(data[key]),typ_data))
+			TYPE_BOOL:saveC.lines.append(format_main("bool",key,str(data[key]),typ_data))
+			TYPE_STRING:
+				var text : String = data[key]
+				if text.contains("\n") or text.contains("\r"):
+					text = text.replace("\r\n", "\n").replace("\r","\n")
+					saveC.lines.append_array(format_multiline(key, text, typ_data)) 
+				else: 
+					if text != text.strip_edges() or (text.length() >= 2 and text.begins_with("\"") and text.ends_with("\"")):
+						text = "\"" + text + "\""
+					saveC.lines.append(format_main("str",key,text,typ_data))
 			TYPE_VECTOR2:
 				var vec2 = str(data[key])
 				vec2 = vec2.trim_prefix("(").trim_suffix(")").strip_edges()
-				saveC.lines.append(format_main("vec2",key,str(vec2),type_data.DEFAULT))
+				saveC.lines.append(format_main("vec2",key,str(vec2),typ_data))
 			TYPE_VECTOR3:
 				var vec3 = str(data[key])
 				vec3 = vec3.trim_prefix("(").trim_suffix(")").strip_edges()
-				saveC.lines.append(format_main("vec3",key,str(vec3),type_data.DEFAULT))
+				saveC.lines.append(format_main("vec3",key,str(vec3),typ_data))
 			TYPE_COLOR:
 				var colr = str(data[key])
 				colr = colr.trim_prefix("(").trim_suffix(")").strip_edges()
-				saveC.lines.append(format_main("color",key,str(colr),type_data.DEFAULT))
+				saveC.lines.append(format_main("color",key,str(colr),typ_data))
 			_: 
 				saveC.warn.append(new_err("S02",saveC.path,saveC.line_index))
-				saveC.lines.append(format_main("var",key,str(data[key]),type_data.DEFAULT))
+				saveC.lines.append(format_main("var",key,str(data[key]),typ_data))
 			_: 
 				saveC.warn.append(new_err("S02",saveC.path,saveC.line_index))
-				saveC.lines.append(format_main("var",key,str(data[key]),type_data.DEFAULT))
+				saveC.lines.append(format_main("var",key,str(data[key]),typ_data))
 
-static func format_main(prefix: String, name: String, value: String, typ_data: type_data, suffix: String = ""):
+static func format_main(prefix: String, name, value: String, typ_data: type_data, suffix: String = ""):
 	if typ_data == type_data.ARRAY:
 		return "%s %s" % [prefix, value] if suffix == "" else "%s %s %s" % [prefix, value, suffix]
 	else: return "%s %s : %s" % [prefix, name, value] if suffix == "" else "%s %s : %s %s" % [prefix, name, value, suffix]
+
+static func format_multiline(name, value: String, typ_data : type_data):
+	var out : Array = ["str/" if typ_data == type_data.ARRAY else "str/ %s :" % name]
+	out.append_array(Array(value.split("\n")))
+	out.append("/str")
+	return out

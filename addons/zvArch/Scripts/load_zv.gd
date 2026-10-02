@@ -157,12 +157,20 @@ static func main_parser(loadC: loadContent, typ_data: type_data, only_metadata :
 					var content = line.trim_prefix("bool").strip_edges()
 					if not split_main(loadC,typ_data,type_format.BOOL,temp_dict,temp_array,content):
 						continue 
-				"str", "str/": 
-					var content = str_main(loadC,"str","/str",line)
-					if not content:
-						content = line.trim_prefix("str").strip_edges()
+				"str": 
+					var content = line.trim_prefix("str").strip_edges()
 					if not split_main(loadC,typ_data,type_format.STRING,temp_dict,temp_array,content):
 						continue 
+				"str/":
+					var multi = str_main(loadC,line)
+					if multi == null:
+						continue 
+					if typ_data == type_data.ARRAY:
+						temp_array.append(multi[1])
+					elif multi[0] == "":
+						loadC.err.append(new_err("L01",loadC.path, loadC.line_index))
+					else:
+						temp_dict[multi[0]] = multi[1]
 				"vec2":
 					var content = line.trim_prefix("vec2").strip_edges()
 					if not split_main(loadC,typ_data,type_format.VECT2,temp_dict,temp_array,content):
@@ -181,23 +189,23 @@ static func main_parser(loadC: loadContent, typ_data: type_data, only_metadata :
 	return temp_dict
 
 static func split_main(loadC:loadContent,typ_data: type_data, typ_format : type_format, temp_dict : Dictionary, temp_array : Array, content: String):
+	if typ_data == type_data.ARRAY:
+		var item = format_split(loadC, typ_format, content)
+		if item == null:
+			loadC.err.append(new_err("L01",loadC.path, loadC.line_index))
+			return false
+		temp_array.append(item)
+		return true
 	var parts = content.split(":", true, 1)
-	var resultFormat
 	if  parts.size() != 2 and parts.size() != 1:
 		loadC.err.append(new_err("L01",loadC.path, loadC.line_index))
 		return false
-	if parts.size() == 2: resultFormat = format_split(loadC,typ_format, parts[1])
-	elif parts.size() == 1 and typ_data == type_data.ARRAY:resultFormat = format_split(loadC,typ_format, parts[0])
-	if resultFormat == null:
-		loadC.err.append(new_err("L02",loadC.path, loadC.line_index))
+	var result = format_split(loadC, typ_format, parts[1])
+	if result == null:
+		loadC.err.append(new_err("L01",loadC.path, loadC.line_index))
 		return false
-	if typ_data == type_data.ARRAY:
-		temp_array.append(resultFormat)
-		return true 
-	else:
-		var title = parts[0].strip_edges()
-		temp_dict[title] = resultFormat
-		return true 
+	temp_dict[parts[0].strip_edges()] = result
+	return true 
 static func format_split(loadC:loadContent, typ_format: type_format, content):
 	content = content.strip_edges()
 	match typ_format:
@@ -276,24 +284,27 @@ static func format_split(loadC:loadContent, typ_format: type_format, content):
 				loadC.err.append(new_err("L08",loadC.path))
 				return
 
-static func str_main(loadC: loadContent, prefix: String, suffix: String, line: String,):
-	var type_str = line.strip_edges().get_slice(" ",0)
-	if type_str.length() <= prefix.length() or type_str[prefix.length()] != "/":return
-	var new_prefix = prefix+"/"
-	var content : Array = [line.trim_prefix(new_prefix).strip_edges()]
+static func str_main(loadC: loadContent, line: String,):
+	var header = line.trim_prefix("str/").strip_edges()
+	var parts = header.split(":", true, 1)
+	var name = parts[0].strip_edges()
+	var body : Array = []
+	if parts.size() == 2 and parts[1].strip_edges() != "":
+		body.append(parts[1].strip_edges())
 	var close_str : int = 0
 	while loadC.line_index < loadC.lines.size():
-		var next_line = loadC.lines[loadC.line_index].strip_edges()
+		var raw = loadC.lines[loadC.line_index].trim_suffix("\r")
+		var next_line = raw.strip_edges()
 		loadC.line_index += 1
-		if next_line.begins_with(new_prefix):
-			close_str += 1
-		if next_line.begins_with(suffix) and close_str == 0:
-			return "\n".join(content)
-		elif next_line == suffix:
+		if next_line == "/str":
+			if close_str == 0:
+				return [name, "\n".join(body)]
+			close_str -=1 
+		elif next_line.begins_with("str/"):
 			close_str -= 1
-		content.append(next_line)
-	loadC.err.append(new_err("L09",loadC.path, loadC.line_index))
-	return
+		body.append(raw)
+	loadC.err.append(new_err("L09", loadC.path, loadC.line_index))
+	return null
 
 static func var_format(content:String):
 	content = content.strip_edges()
