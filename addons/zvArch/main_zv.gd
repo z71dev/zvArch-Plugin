@@ -33,7 +33,7 @@ const ERROR_DICT : Dictionary = {
 	"S02" : "ERROR_SV02 | Unsupported data type - value converted to a string ",
 	"S03" : "ERROR_SV03 | Dictionary key is not String",
 	##Metadata
-	"M01" : "ERROR_MTDT | Metadata has not been properly closed"
+	"M01" : "ERROR_MTDT01 | Metadata has not been properly closed"
 }
 
 #Plugin functions 
